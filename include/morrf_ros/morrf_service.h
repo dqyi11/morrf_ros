@@ -14,9 +14,6 @@ public:
  
   ros::NodeHandle     m_nh;
   ros::ServiceServer  m_mopp_srv;
-
-
-
 };
 
 #endif // MORRF_SERVICE_H_
