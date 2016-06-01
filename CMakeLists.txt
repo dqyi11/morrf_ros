@@ -15,13 +15,13 @@ find_package(catkin REQUIRED COMPONENTS
 # Find package morrf
 find_path(MORRF_INCLUDE_DIR morrf/morrf.h
     HINTS ${MORRF_INCLUDEDIR} ${MORRF_INCLUDE_DIRS})
-message("MORRF_INCLUDE_DIR:")
-message(${MORRF_INCLUDE_DIR})
+#message("MORRF_INCLUDE_DIR:")
+#message(${MORRF_INCLUDE_DIR})
 
 find_library(MORRF_LIBRARY morrf
     HINTS ${MORRF_LIBDIR} ${MORRF_LIBRARY_DIRS})
-message("MORRF_LIBRARY:")
-message(${MORRF_LIBRARY})
+#message("MORRF_LIBRARY:")
+#message(${MORRF_LIBRARY})
 
 add_message_files (
   FILES
@@ -32,7 +32,7 @@ add_message_files (
 
 add_service_files(
   FILES
-  morrf.srv
+  morrf_mopp.srv
 )
 
 generate_messages (
@@ -50,9 +50,15 @@ catkin_package(
 
 # Add the headers from roscpp
 include_directories(include ${catkin_INCLUDE_DIRS}
+                            ${MORRF_INCLUDE_DIR}
                             )
 
-
+add_executable(morrf_node src/morrf_service.cpp
+                          src/morrf_service_node.cpp
+              )
+target_link_libraries(morrf_node ${catkin_LIBRARIES} 
+                                 ${MORRF_LIBRARY}
+                     )
 
 
 
