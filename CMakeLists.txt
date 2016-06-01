@@ -12,6 +12,17 @@ find_package(catkin REQUIRED COMPONENTS
              message_generation
             )
 
+# Find package morrf
+find_path(MORRF_INCLUDE_DIR morrf/morrf.h
+    HINTS ${MORRF_INCLUDEDIR} ${MORRF_INCLUDE_DIRS})
+message("MORRF_INCLUDE_DIR:")
+message(${MORRF_INCLUDE_DIR})
+
+find_library(MORRF_LIBRARY morrf
+    HINTS ${MORRF_LIBDIR} ${MORRF_LIBRARY_DIRS})
+message("MORRF_LIBRARY:")
+message(${MORRF_LIBRARY})
+
 add_message_files (
   FILES
   int_array.msg
