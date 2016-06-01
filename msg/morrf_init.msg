@@ -1,7 +1,7 @@
 geometry_msgs/Pose2D goal
 geometry_msgs/Pose2D start
-int_array map
-int_array[] cost_maps
+int8_image map
+int8_image[] cost_maps
 int64 iterations
 int64 segment_length
 int64 number_of_trees
