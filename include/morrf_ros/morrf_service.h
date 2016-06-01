@@ -10,11 +10,8 @@ public:
   virtual ~MORRFService();
 
   bool get_multi_obj_paths( morrf_ros::morrf_mopp::Request& req,
-                            morrf_ros::morrf_mopp::Response& res ); 
-
-  void clear_costmaps();
-
-
+                            morrf_ros::morrf_mopp::Response& res); 
+ 
   ros::NodeHandle     m_nh;
   ros::ServiceServer  m_mopp_srv;
 };
