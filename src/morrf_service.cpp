@@ -87,17 +87,23 @@ MORRFService::~MORRFService() {
 }
   
 
-bool MORRFService::get_multi_obj_paths( morrf_ros::morrf_mopp::Request& req, 
+bool MORRFService::get_multi_obj_paths( morrf_ros::morrf_mopp::Request& req,
                                         morrf_ros::morrf_mopp::Response& res) {
   std::cout << "---------------------------------" << std::endl;
   std::cout << "MORRFService::get_multi_obj_paths" << std::endl;
   std::cout << "SERVICE RECEIVED" << std::endl;
-  std::cout << req.init << std::endl;
+  //std::cout << req.init << std::endl;
+  std::cout << "size:" << req.init.width << "*" << req.init.height << std::endl;
+  std::cout << "num of obj: " << req.init.objective_number << " , num of sub: " << req.init.number_of_trees;
+  std::cout << "segment: " << req.init.segment_length << " method:" << req.init.method_type << std::endl;
+  std::cout << "start x:" << req.init.start.x << " y:" << req.init.start.y << std::endl;
+  std::cout << "goal x:" << req.init.goal.x << " y:" << req.init.goal.y << std::endl;
+  std::cout << "num of iteration:" << req.init.number_of_iterations << std::endl;
   std::cout << "---------------------------------" << std::endl;
- 
-  std::vector<COST_FUNC_PTR> funcs; 
+
+  std::vector<COST_FUNC_PTR> funcs;
   std::vector<int**> fitnessDistributions;
-  
+
   int** pp_obstacle = new int*[req.init.map.width];
   for(unsigned int w=0; w < req.init.map.width; w++) {
     pp_obstacle[w] = new int[req.init.map.height];
@@ -105,16 +111,16 @@ bool MORRFService::get_multi_obj_paths( morrf_ros::morrf_mopp::Request& req,
       pp_obstacle[w][h] = req.init.map.int_array[w*req.init.map.height+h];
     }
   }
-  MORRF morrf(req.init.width, req.init.height, req.init.objective_number, req.init.number_of_trees, 
+  MORRF morrf(req.init.width, req.init.height, req.init.objective_number, req.init.number_of_trees,
               req.init.segment_length, (MORRF::MORRF_TYPE)req.init.method_type);
 
   if(req.init.minimum_distance_enabled == true) {
     funcs.push_back(calcDist);
     fitnessDistributions.push_back(NULL);
-  } 
+  }
 
   for(unsigned int i=0; i < req.init.cost_maps.size(); i++) {
-    morrf_ros::int8_image img = req.init.cost_maps[i];
+    morrf_ros::int16_image img = req.init.cost_maps[i];
     int** p_costmap = new int*[img.width];
     for(unsigned int w=0; w < img.width; w++) {
       p_costmap[w] = new int[img.height];
@@ -131,30 +137,38 @@ bool MORRFService::get_multi_obj_paths( morrf_ros::morrf_mopp::Request& req,
   POS2D goal(req.init.goal.x, req.init.goal.y);
   morrf.init(start, goal);
   morrf.load_map(pp_obstacle);
+  
+  std::cout << "dump map info " << std::endl;
+  morrf.dump_map_info("./test_obs.txt");
+  
   std::cout << "start planning" << std::endl;
   while(morrf.get_current_iteration() <= req.init.number_of_iterations) {
     morrf.extend();
     std::cout << "Iteration " << morrf.get_current_iteration() << std::endl;
   }
-  
+
   std::vector<Path*> paths = morrf.get_paths();
+
+  std::cout << paths.size() << " paths found " << std::endl;
   for(unsigned int i=0; i < paths.size(); i++) {
-    morrf_ros::multi_objective_path pp;
     Path* p = paths[i];
-    for(unsigned int k=0; k < p->m_objective_num; k++ ) {
-      std_msgs::Float64 val;
-      val.data = p->m_cost[k];
-      pp.cost.push_back(val);
+    if(p) {
+      morrf_ros::multi_objective_path pp;
+      for(unsigned int k=0; k < p->m_objective_num; k++ ) {
+        std_msgs::Float64 val;
+        val.data = p->m_cost[k];
+        pp.cost.push_back(val);
+      }
+      for(unsigned int j=0; j < p->m_waypoints.size(); j++) {
+        geometry_msgs::Pose2D point;
+        point.x = p->m_waypoints[j][0];
+        point.y = p->m_waypoints[j][1];
+        pp.waypoints.push_back(point);
+      }
+      res.paths.push_back(pp);
     }
-    for(unsigned int j=0; j < p->m_waypoints.size(); j++) {
-      geometry_msgs::Pose2D point;
-      point.x = p->m_waypoints[j][0];
-      point.y = p->m_waypoints[j][1];
-      pp.waypoints.push_back(point);
-    }
-    res.paths.push_back(pp);
   }
-  std::cout << "Path exported " << std::endl;
+  std::cout << paths.size() << " paths exported " << std::endl;
 
   for(unsigned int w=0; w < req.init.map.width; w++) {
     delete [] pp_obstacle[w];
@@ -176,6 +190,6 @@ bool MORRFService::get_multi_obj_paths( morrf_ros::morrf_mopp::Request& req,
 
   return true;
 }
-  
- 
+
+
 
